@@ -1,0 +1,483 @@
+\            Social Distress Response Paradigm - Shaping Step 2                                                                                                                                                                                                                     \                Social Distress Response Paradigm (SDRP)
+\             Julen Hernandez Lallement, 19.10.2016 Amsterdam
+
+\INPUT
+^L1     = 1         \ Lever 1      (Right)
+^Rwd_1  = 2         \ Head Entry 1 (Right)
+^L2     = 3         \ Lever 2      (Left)
+^Rwd_2  = 4         \ Head Entry 1 (Left)
+^NP     = 5         \ NosePoke
+
+\OUTPUT
+^L1_Press     = 1      \ Lever Press  L1 (Right)
+^L1_Light     = 2      \ Reward Light L1 (Right)
+^Pellet_L1    = 3      \ Pellet Disp  L1 (Right)
+^L2_Press     = 4      \ Lever Press  L2 (Left)
+^L2_Light     = 5      \ Reward Light L2 (Left)
+^Pellet_L2    = 6      \ Pellet Disp  L2 (Left)
+^NP_Light     = 7      \ NosePoke Light
+^House_Obs    = 8      \ HouseLight Actor Compartment
+^House_Dem    = 9      \ HouseLight Demo  Compartment
+
+^Shock        = 11     \ Electric Shock
+
+\Z-Pulses Used
+
+^Z_Go_Extinction      = 1  \ Signals Go
+^Z_NP_End             = 2  \ Signals NP End
+^Z_NPBreak            = 3  \ Signal Completed NosePoke Break
+^Z_Decision           = 4  \ Signal Light Turned On
+^Z_Decision_End       = 5  \ Signals Decision Made
+^Z_Forced_Back        = 6  \ Signals Forced L Trial
+^Z_Forced_Front       = 7  \ Signals Forced R Trial
+^Z_Lever_Choice       = 8  \ Signals Free Trial
+^Z_Hard_Lever         = 9 \ Signal Hard Lever
+^Z_Easy_Lever         = 10 \ Signal Easy Lever
+^Z_Trial_End          = 11 \ Signal End of Trial
+^Z_ITI                = 12 \ Signal beginning of ITI
+^Z_Failed             = 13 \ Signal Failed Trial
+^Z_Log_Event          = 14 \ Controls Logging of Events & Occurence Time in Arrays N & O
+^Z_Stop               = 15 \ Signals Stop of Reward Delivery
+^Z_LeverPress_Back    = 16 \ Signals Back Lever Press
+^Z_LeverPress_Front   = 17\ Signals Front Lever Press
+
+\ Arrays used
+\ A = Trial by Trial Data
+\ B = Block by Block Data
+\ N = Events Codes
+\ O = Absolut Event Time Occurence
+
+
+\ Varibles used
+\ [If necessary (run out of variables),
+\ use one array for each of these variables]
+
+\ C = Counter for Nose Poke Level Inputs
+\ D = Random value from Z List (trial type)
+\ E = Random value from list Z, define which reward is delayed/immediate
+\ F = Variable under which licks time ocurrence are stored
+\ G = Reward Counter
+\ H = Counter for Correct Trials
+\ I = Trial number in this block
+\ J = Counter for Decision RT
+\ K = Block number
+\ L = Trial Number
+\ M = List
+\ P = Increment with Array A
+\ Q = Counter for NP RT
+\ R = List of Constant
+\ S = Variable under which events codes/time occurence are stored
+\ T = Time Variable
+\ U = ...
+\ V = Used to Control for Failed Forced Trials
+\ W = Increment with Array B
+\ Y = Index for Event Code
+\ Z = List of trial type
+
+\ R() = Control Variables with Assigned Aliases as Defined
+Var_Alias Session Duration (sec)          = R(0)   \ Default =
+Var_Alias InterTrial Interval (sec)       = R(1)   \ Default =
+Var_Alias Total Trial Number (sec)        = R(2)   \ Default =
+Var_Alias Number Forced Trials            = R(3)   \ Default =
+Var_Alias Tot Block Number                = R(4)   \ Default =
+Var_Alias Trial per Block                 = R(5)   \ Default =
+Var_Alias Max NP Duration (msec)          = R(6)   \ Default =
+Var_Alias NP Time Out (sec)               = R(7)   \ Default =
+Var_Alias Lever TimeOut (sec)             = R(8)   \ Default =
+Var_Alias Side of Easy Lever              = R(9)   \ Default =
+Var_Alias Reward Amount                   = R(10)  \ Default =
+
+^SessDur         = 0
+^TrialDur        = 1
+^TrialNumb       = 2
+^ForcedNumb      = 3
+^BlockNumb       = 4
+^TrialperBlock   = 5
+^MaxNPDur        = 6
+^NP_TimeOut      = 7
+^Lever_TimeOut   = 8
+^SideEasyLever   = 9
+^Rwd_Amount      = 10
+
+
+\  A()     = Trial by Trial Data
+\  A(0)    = Side of the Easy Lever (1:Left - 2:Right)
+\  A(P)    = Trial Number
+\  A(P+1)  = Trial Number in this Block
+\  A(P+2)  = Trial Type    (1 = Free, 2 = Forced Left, 3 = Forced Right)
+\  A(P+3)  = Chosen Side   (1 = Left, 2 = Right)
+\  A(P+4)  = Chosen Lever  (1 = Easy, 2 = Hard)
+\  A(P+5)  = Omission Type (-1, -2, -3)
+\  A(P+6)  = Trial Completed Successfully (1 = Yes, 0 = No)
+\  A(P+7)  = Latency Nose Poke
+\  A(P+8)  = Latency Lever Press
+\  A(P+9)  = Short Nose Poke duration (1 = Yes, 0 = No)
+
+\  B()     = Block by Block Data
+\  B(W)    = Block Number
+\  B(W+1)  = Number of Easy Reward Chosen in this Block
+\  B(W+2)  = Number of Hard Reward Chosen in this Block
+\  B(W+3)  = Number of Successful Free Trials this Block
+\  B(W+4)  = Number of Nose Poke   Omission     (Type -1)
+\  B(W+5)  = Number of Lever Press Omission     (Type -2)
+\  B(W+6)  = Number of Failed Forced Trials     (Type -3)
+
+LIST Z = 1 , 2
+LIST M = 500, 100, 500
+
+DIM A = 2000
+DIM B = 200
+DIM N = 10000
+DIM O = 10000
+DIM R = 25
+DIM X = 30
+
+DISKCOLUMNS = 10
+DISKFORMAT  = 7.3
+DISKVARS    = A, B, N, O
+
+                                      \\\Script\\\
+
+S.S.1,
+S1,                 \ Set Values
+                    \ LOCK OFF the House Light for the next session, and turn it ON while session did not start
+                    \ Set all session parameters values
+
+                    \ Show those paremeters on the display
+
+            0.01": LOCKOFF ^House_Obs, ^House_Dem; On ^House_Obs, ^House_Dem;
+
+                   SET R(^SessDur) = 1800,          R(^TrialDur) = 10",          R(^TrialNumb) = 50,     R(^ForcedNumb) = 2,        R(^BlockNumb) = 5,
+                       R(^TrialperBlock) = 10,      R(^MaxNPDur) = 50,           R(^NP_TimeOut) = 5",    R(^Lever_TimeOut) = 40",   R(^SideEasyLever) = 1,
+                       R(^Rwd_Amount) = 1;
+
+
+                   Show, 1, Duration Session (mn),                   R(^SessDur)/60;
+                   Show, 2, Duration Trial,                          R(^TrialDur);
+                   Show, 3, # Total Trials,                          R(^TrialNumb);
+                   Show, 4, # Total Blocks,                          R(^BlockNumb);
+                   Show, 5, Trial per Block,                         R(^TrialperBlock);
+                   Show, 6, # Forced Trials,                         R(^ForcedNumb);
+                   Show, 7, NosePoke Duration (ms),                  R(^MaxNPDur)*10;
+                   Show, 8, NosePoke TimeOut (s),                    R(^NP_TimeOut)/100;
+                   Show, 9, Lever Press TimeOut (s),                 R(^Lever_TimeOut)/100;
+                   Show, 10, Position of High Rwd Lever (1 = R - 2 = L), R(^SideEasyLever);
+                   Show, 11, Reward Amount,                          R(^Rwd_Amount)       ---> S2
+
+S2,
+            #Start: Set I = 1, K = 1, W = 1, B(W) = W, A(0) = R(^SideEasyLever), Y = 1;
+                    OFF ^House_Dem, ^House_Obs; Z^Z_Log_Event ---> S3
+
+S3,
+             0.1": ADD L;
+                   Set P = 10*(L-1)+1, Y = 2, A(P) = L, A(P+1) = I;
+                   Z^Z_Log_Event;
+                   IF V = 1 [@Inc, @Cor]
+                                @Inc: Set V = 0 ---> S4
+                                @Cor: RANDD D = Z; Set V = 0 ---> S4
+S4,
+
+            0.1": Z^Z_Decision;
+                  IF R(^ForcedNumb) < I [@Free, @Forced]
+                      @Free: Set A(P+2) = 1;
+                             Z^Z_Lever_Choice;
+                             ON ^L1_Press, ^L2_Press;
+
+                             IF I = R(^ForcedNumb) + 1 [@Clear, @NotClear]
+                                          @Clear:  Set B(W+3) = 0, B(W+1) = 0, B(W+2) = 0, B(W+4) = 0, B(W+5) = 0  ---> S5
+                                          @NotClear:  ---> S5
+                      @Forced: IF D = 1 [@L1, @L2]   \Forced Trial Type (D = 1 = Back Side)
+                               @L1: Set A(P+2) = 2; Z^Z_Forced_Back; ON ^L1_Press ---> S5
+                               @L2: Set A(P+2) = 3; Z^Z_Forced_Front; ON ^L2_Press ---> S5
+
+S5,
+
+          #Z^Z_LeverPress_Back:  IF R(^SideEasyLever) = 1 [@Hard, @Easy]
+                                       @Hard: Z^Z_Hard_Lever ---> S6
+                                       @Easy: Z^Z_Easy_Lever ---> S6
+
+          #Z^Z_LeverPress_Front: IF R(^SideEasyLever) = 1 [@Easy, @Hard]
+                                       @Easy: Z^Z_Easy_Lever ---> S6
+                                       @Hard: Z^Z_Hard_Lever ---> S6
+
+          R(^Lever_TimeOut)#T: OFF ^L1_Press, ^L2_Press;
+                                  SET Y = -2, A(P+6) = 0, A(P+5) = -2, Q = 0; ADD B(W+5);
+                                  Z^Z_Log_Event; Z^Z_ITI; Z^Z_Decision_End; Z^Z_Failed ---> S7
+
+S6,
+          #Z^Z_Stop: Z^Z_ITI;
+                     ADD B(W+3); Set A(P+6) = 1, A(P+5) = 0, Y = 8;
+                     Z^Z_Log_Event ---> S7
+
+S7,
+
+  #Z^Z_Trial_End: ADD I; IF I > R(^TrialperBlock) [@ChangeBlock, @Stay]
+                                   @ChangeBlock: IF L >= R(^TrialNumb)[@Stop, @GoOn]
+                                                 @Stop: LOCKON ^House_Obs, ^House_Dem ---> S9
+                                                  @GoOn: ADD K ---> S8
+
+                                  @Stay: IF L >= R(^TrialNumb)[@Stop, @GoOn]
+
+                 @Stop: LOCKON ^House_Obs, ^House_Dem ---> S9
+                 @GoOn: ---> S3
+S8,
+
+   0.01": Set W = 7*(K-1)+1, B(W) = K, I = 1 ---> S3
+
+S9,    \ Wait for Screen Update and end with
+       \ STOPABORTFLUSH for Automatic Data Saving
+
+  2": Set Y = 9; Z^Z_Log_Event ---> S10
+
+S10,
+
+  0.1": ---> STOPABORTFLUSH
+
+
+\************************************************************
+\                 TIME INCREMENTS 0.1s
+\************************************************************
+
+S.S.2,   \ State Set 2
+S1,      \ Wait for Start Signal
+
+  #Start: ---> S2
+
+S2,      \ Set Variable T as incrementing without stopping
+0.1": Set T = T + 0.1;
+      IF T > R(^SessDur) [@Stop, @GoOn]
+                                   @Stop: LOCKON ^House_Obs, ^House_Dem ---> S3
+                                   @GoOn: ---> SX
+
+S3,
+
+  2": ---> StopAbortFlush
+
+\************************************************************
+\             RECORDING OF RT for NosePoke
+\************************************************************
+
+S.S.3,   \ State Set 3
+S1,      \ When Z^Z_Go_Extinction arrives: Set Q and U
+
+ #Z^Z_Go_Extinction: Set Q = 0.01 ---> S2
+
+S2,      \ Set Q as counters
+         \ When Z^Z_NP_End arrives, store the value of Q as NosePoke RT in array A
+
+0.01": Set Q = Q + 0.01 ---> SX
+       #Z^Z_NP_End: Set A(P+7) = Q, Q = 0 ---> S1
+
+
+\************************************************************
+\             RECORDING OF RT for Decision
+\************************************************************
+
+S.S.4,   \ State Set 4
+S1,      \ When Z^Z_Decision arrives: Set J
+
+ #Z^Z_Decision: Set J = 0.01 ---> S2
+
+S2,      \ Set J as counters
+         \ When Z^Z_NP_End arrives, store the value of Q as NosePoke RT in array A
+
+0.01": Set J = J + 0.01 ---> SX
+       #Z^Z_Decision_End: Set A(P+8) = J, J = 0 ---> S1
+
+
+\***************************************************
+\          EASY LEVER + SHOCK TO DEMONSTATOR
+\***************************************************
+
+
+S.S.5,     \State Set 5
+S1,        \ When Z^^Z_Easy_Lever arrives
+           \     - Log Event and Store Data
+
+    #Z^Z_Easy_Lever: SET A(P+4) = 1, Y = 4; ADD B(W+2);
+                      Z^Z_Log_Event ---> S2
+
+S2,
+
+  0.1": ON ^Pellet_L2, ^L2_Light; ADD G; Set Y = 6; Z^Z_Log_Event ---> S3
+
+S3,
+
+  1": OFF ^Pellet_L2, ^L2_Light; IF G = R(^Rwd_Amount) [@Stop, @GoOn]
+                                                 @Stop: Set G = 0, Y = 7; Z^Z_Stop; Z^Z_Log_Event ---> S1
+                                                 @GoOn: ---> S2
+
+
+\***************************************************
+\               HARD LEVER
+\***************************************************
+
+S.S.6,     \State Set 6
+S1,        \ When Z^Z_Hard_Lever arrives
+            \     - Log Event and Store Data
+
+    #Z^Z_Hard_Lever:  SET Y = 4, A(P+4) = 2; ADD B(W+1);
+                      Z^Z_Log_Event ---> S2
+
+S2,
+
+  0.1": ON ^Pellet_L1, ^L1_Light; ADD G; Set Y = 6; Z^Z_Log_Event ---> S3
+
+S3,
+
+  1": OFF ^Pellet_L1, ^L1_Light;  IF G = R(^Rwd_Amount) [@Stop, @GoOn]
+                                                 @Stop: Set G = 0, Y = 7; Z^Z_Stop; Z^Z_Log_Event ---> S1
+                                                 @GoOn: ---> S2
+
+\***************************************************
+\     NEW TRIAL STARTED REGARDLESS OF RAT ACTION
+\***************************************************
+
+S.S.7, \ State Set 7
+
+S1,
+  #START:  ---> S2
+
+S2,
+
+ R(^TrialDur)#T: Z^Z_Trial_End ---> S2
+
+\***************************************************
+\          FAILED FORCED TRIALS
+\***************************************************
+
+S.S.8, \ State Set 8
+S1,
+
+   #Z^Z_Failed: ---> S2
+
+S2,
+
+   0.01": IF R(^ForcedNumb) < I [@Free, @Forced]
+                                     @Free: ---> S1
+                                     @Forced: Set I = I - 1, L = L - 1, V = 1, Y = -6, A(P+5) = 0, A(P+9) = 0; ADD B(W+6) ---> S1
+
+\***************************************************
+\          FREE LEVER CHOICES
+\***************************************************
+
+S.S.9, \ State Set 9
+S1,
+
+   #Z^Z_Lever_Choice: ---> S2
+
+S2,
+
+      #R^L1:  ADD C; SET Y = 444, A(P+3) = 1;
+              Z^Z_Decision_End; Z^Z_LeverPress_Back; OFF ^L1_Press, ^L1_Light, ^L2_Press, ^L2_Light; Z^Z_Log_Event ---> S1
+
+
+      #R^L2:  ADD C; SET Y = 444, A(P+3) = 2;
+              Z^Z_Decision_End; Z^Z_LeverPress_Front; OFF ^L1_Press, ^L1_Light, ^L2_Press, ^L2_Light; Z^Z_Log_Event ---> S1
+
+      #Z^Z_Failed: ---> S1
+
+\***************************************************
+\               FORCED FRONT LEVER
+\***************************************************
+
+S.S.10, \ State Set 10
+S1,
+
+   #Z^Z_Forced_Front: ---> S2
+
+S2,
+
+   #R^L2:  SET Y = 444, A(P+3) = 2;
+           Z^Z_Decision_End; Z^Z_LeverPress_Front; OFF ^L2_Press, ^L2_Light; Z^Z_Log_Event ---> S1
+
+  #Z^Z_Failed: ---> S1
+
+\***************************************************
+\               FORCED BACK LEVER
+\***************************************************
+
+S.S.11, \ State Set 11
+S1,
+
+   #Z^Z_Forced_Back: ---> S2
+
+S2,
+
+   #R^L1: SET Y = 444, A(P+3) = 1;
+          Z^Z_Decision_End; Z^Z_LeverPress_Back; OFF ^L1_Press, ^L1_Light; Z^Z_Log_Event ---> S1
+
+
+  #Z^Z_Failed: ---> S1
+
+\***************************************************
+\                       LOG EVENTS
+\***************************************************
+
+S.S.12, \ State Set 12
+S1,
+
+  #Z^Z_Log_Event: Set O(S) = T, N(S) = Y; ADD S;
+                  Set X(1) = Y ---> S1
+
+
+\***************************************************
+\                  UPDATE DISPLAY
+\***************************************************
+
+S.S.13, \ State Set 13
+S1,
+
+  #START: SHOW 1, Trial #, L,
+               2, Block #, K,
+               3, Trial in Block, I,
+               4, Type of Trial, A(P+2),
+               5, NosePoke RT, Q,
+               6, Lever Press RT, J,
+               7, Correct Trials in this Block, B(W+3),
+               8, Total Time, T,
+               9, ITI, R(^TrialDur)/100,
+              10, Total Trial/Block, R(^TrialperBlock),
+              11, NosePoke Duration, R(^MaxNPDur),
+              12, Failed Forced Trial in this Block, B(W+6),
+              13, Position of High Rwd Lever (1=R - 2=L), R(^SideEasyLever),
+              14, # Left Block 1, B(3),
+              15, # Left Block 2, B(10),
+              16, # Left Block 3, B(17),
+              17, # Left Block 4, B(24),
+              18, # Left Block 5, B(31),
+              19, # Right Block 1, B(2),
+              20, # Right Block 2, B(9),
+              21, # Right Block 3, B(16),
+              22, # Right Block 4, B(23),
+              23, # Right Block 5, B(30),
+              24, # Total Left, B(3) + B(10) + B(17) + B(24) + B(31),
+              25, # Total Right, B(2) + B(9) + B(16) + B(23) + B(30) ---> S2
+
+
+S2,
+  0.1":     SHOW 1, Trial #, L,
+               2, Block #, K,
+               3, Trial in Block, I,
+               4, Type of Trial, A(P+2),
+               5, NosePoke RT, Q,
+               6, Lever Press RT, J,
+               7, Correct Trials in this Block, B(W+3),
+               8, Total Time, T,
+               9, ITI, R(^TrialDur)/100,
+              10, Total Trial/Block, R(^TrialperBlock),
+              11, NosePoke Duration, R(^MaxNPDur),
+              12, Failed Forced Trial in this Block, B(W+6),
+              13, Position of High Rwd Lever (1=R - 2=L), R(^SideEasyLever),
+              14, # Left Block 1, B(3),
+              15, # Left Block 2, B(10),
+              16, # Left Block 3, B(17),
+              17, # Left Block 4, B(24),
+              18, # Left Block 5, B(31),
+              19, # Right Block 1, B(2),
+              20, # Right Block 2, B(9),
+              21, # Right Block 3, B(16),
+              22, # Right Block 4, B(23),
+              23, # Right Block 5, B(30),
+              24, # Total Left, B(3) + B(10) + B(17) + B(24) + B(31),
+              25, # Total Right, B(2) + B(9) + B(16) + B(23) + B(30) ---> SX

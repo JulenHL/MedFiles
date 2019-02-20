@@ -1,0 +1,231 @@
+\            Social Distress Response Paradigm - Shaping Step 1                                                                                                                                                                                                                     \                Social Distress Response Paradigm (SDRP)
+\             Julen Hernandez Lallement, 25.01.2017 Amsterdam
+
+
+\INPUT
+^L1     = 1         \ Lever 1      (Right)
+^Rwd_1  = 2         \ Head Entry 1 (Right)
+^L2     = 3         \ Lever 2      (Left)
+^Rwd_2  = 4         \ Head Entry 1 (Left)
+^NP     = 5         \ NosePoke
+
+\OUTPUT
+^L1_Press     = 1      \ Lever Press  L1 (Right)
+^L1_Light     = 2      \ Reward Light L1 (Right)
+^Pellet_L1    = 3      \ Pellet Disp  L1 (Right)
+^L2_Press     = 4      \ Lever Press  L2 (Left)
+^L2_Light     = 5      \ Reward Light L2 (Left)
+^Pellet_L2    = 6      \ Pellet Disp  L2 (Left)
+^NP_Light     = 7      \ NosePoke Light
+^House_Obs    = 8      \ HouseLight Actor Compartment
+^House_Dem    = 9      \ HouseLight Demo  Compartment
+
+^Z_Reaction_Time      = 1  \ Reaction Time Lever Press
+^Z_Lever_Press        = 2  \ Signals Lever Press
+^Z_Dispenser_L1       = 3  \ Signals Pellets to be Delivered at L1
+^Z_Dispenser_L2       = 4  \ Signals Pellets to be Delivered at L2
+^Z_Head_Entry_Time_L1 = 5  \ Reaction Time Head Entry L1
+^Z_Head_Entry_Time_L2 = 6  \ Reaction Time Head Entry L2
+^Z_Head_Entry         = 7  \ Signals Head Entry
+
+\ R() = Control Variables with Assigned Aliases as Defined
+Var_Alias Session Duration (sec)    = R(0)
+Var_Alias Trial Number              = R(1)
+Var_Alias Pellet Number             = R(2)
+
+^SessDur        = 0
+^TrialNumb      = 1
+^PelletNumb     = 2
+
+\  A()     = Trial by Trial Data
+\  A(P)    = Trial Number
+\  A(P+1)  = Pressed Lever
+\  A(P+2)  = Latency Lever Press
+\  A(P+3)  = Latency Head Entry
+
+DIM A = 2000
+DIM R = 5
+
+DISKVARS    = A
+DISKCOLUMNS = 4
+
+\\\ State Set 1 - Main Body \\\
+
+S.S.1,
+S1,
+   0.1": LOCKOFF ^House_Obs, ^House_Dem; ON ^House_Obs, ^House_Dem;
+         Set R(^SessDur) = 1200, R(^TrialNumb) = 50, R(^PelletNumb) = 3 ---> S2
+S2,
+   #Start:  ---> S3
+
+S3,
+   0.1": ADD L; Set P = 4*(L-1)+1, A(P) = L; ON ^L1_Press, ^L2_Press; Z^Z_Reaction_Time;
+         OFF ^House_Obs, ^House_Dem;---> S31
+
+S31,
+
+   #R^L1: ADD U; Z^Z_Dispenser_L1; Z^Z_Lever_Press; Z^Z_Head_Entry_Time_L1; OFF ^L1_Press ---> S4
+
+   #R^L2: ADD E; Z^Z_Dispenser_L2; Z^Z_Lever_Press; Z^Z_Head_Entry_Time_L2; OFF ^L2_Press  ---> S4
+
+S4,
+   #Z^Z_Head_Entry: ---> S5
+
+S5,
+
+  0.1": IF L = R(^TrialNumb) [@Stop, @KeepOn]
+                   @Stop:  ---> S6
+                   @KeepOn: ---> S3
+S6,
+  0.1": ---> STOPABORTFLUSH
+
+
+\************************************************************
+\                Measuring Reaction Time to Lever Press
+\************************************************************
+
+
+S.S.2,    \ State Set 2
+S1,
+
+   #Z^Z_Reaction_Time: Set Q = 0.01 ---> S2
+
+S2,
+
+   0.01": Set Q = Q + 0.01 ---> SX
+          #Z^Z_Lever_Press: Set A(P+2) = Q, Q = 0 ---> S1
+
+\************************************************************
+\          Measuring Reaction Time to Head Entry L1
+\************************************************************
+
+
+S.S.3,    \ State Set 3
+S1,
+
+   #Z^Z_Head_Entry_Time_L1: Set J = 0.01 ---> S2
+
+S2,
+
+   0.01": Set J = J + 0.01 ---> SX
+          #Z^Z_Head_Entry: Set J = 0 ---> S1
+
+\************************************************************
+\          Measuring Reaction Time to Head Entry L2
+\************************************************************
+
+
+S.S.4,    \ State Set 4
+S1,
+
+   #Z^Z_Head_Entry_Time_L2: Set J = 0.01 ---> S2
+
+S2,
+
+   0.01": Set J = J + 0.01 ---> SX
+          #Z^Z_Head_Entry: Set J = 0 ---> S1
+
+\************************************************************
+\          Waiting for Head Entry L1
+\************************************************************
+
+
+S.S.5,    \ State Set 5
+S1,
+
+   #Z^Z_Head_Entry_Time_L1: ---> S2
+
+S2,
+
+          #R^Rwd_1: Z^Z_Head_Entry ---> S1
+
+          15": Set A(P+3) = 66; Z^Z_Head_Entry ---> S1
+
+
+\************************************************************
+\          Waiting for Head Entry L2
+\************************************************************
+
+
+S.S.6,    \ State Set 6
+S1,
+
+   #Z^Z_Head_Entry_Time_L2: ---> S2
+
+S2,
+
+          #R^Rwd_2: Z^Z_Head_Entry---> S1
+
+          15": Set A(P+3) = 66; Z^Z_Head_Entry ---> S1
+
+
+
+\************************************************************
+\                DELIVER PELLETS
+\************************************************************
+
+S.S.7,   \ State Set 7
+S1,      \ Wait for Start Signal
+
+  #Z^Z_Dispenser_L1: Set A(P+1) = 1 ---> S2
+
+  #Z^Z_Dispenser_L2: Set A(P+1) = 2 ---> S4
+
+S2,
+
+  0.1": ON ^Pellet_L1, ^L1_Light ---> S3
+
+S3,
+
+  0.5": OFF ^Pellet_L1, ^L1_Light; ADD V;
+        IF V = R(^PelletNumb) [@Stop, @GoOn]
+                  @Stop: Set V = 0 ---> S1
+                  @GoOn: ---> S2
+
+S4,
+
+  0.1": ON ^Pellet_L2, ^L2_Light ---> S5
+
+S5,
+
+  0.5": OFF ^Pellet_L2, ^L2_Light; ADD V;
+        IF V = R(^PelletNumb) [@Stop, @GoOn]
+                  @Stop: Set V = 0; ON ^L1_Press, ^L2_Press   ---> S1
+                  @GoOn: ---> S4
+
+
+ \***************************************************
+\                  TIME INCREMENTS 0.1s
+\***************************************************
+
+S.S.8, \ State Set 8
+S1,
+
+#Start: ---> S2
+
+S2,      \ Set Variable T as incrementing without stopping
+0.1": Set T = T + 0.1; IF T > R(^SessDur) [@Stop, @GoOn]
+                                   @Stop: LOCKON ^House_Obs, ^House_Dem ---> S3
+                                   @GoOn: ---> SX
+
+S3,
+
+  2": ---> StopAbortFlush
+
+
+\***************************************************
+\                  UPDATE DISPLAY
+\***************************************************
+
+S.S.9, \ State Set 9
+S1,
+
+  0.1": SHOW   1, Trial #, L,
+               2, Lever Press RT (s), Q,
+               7, Head Entry RT (s), J,
+               8, Right Lever Presses, U,
+               3, Left Lever Presses, E,
+               6, Total Time (s), T     ---> SX
+
+
+
